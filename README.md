@@ -29,7 +29,9 @@ popViewport()
 # Evid map 1
 pushViewport(viewport(layout.pos.row = 2, layout.pos.col = 2))
 spec_levels <- plot_evid_map(var_row = dat$a, var_col = dat$b, 
-                             margins = marg_evid_map)
+                             margins = marg_evid_map, 
+                             # Can adjust color and fill for 0 cells:
+                             color_zero = "grey90", fill_zero = "grey98")
 popViewport()
 
 popViewport()
