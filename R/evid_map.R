@@ -65,9 +65,18 @@ plot_evid_map <- function(var_row, var_col, var_row_levels = NULL,
   if (is.null(n_y)) n_y <- length(unique(dat_map$y))
   dat_map$x_num <- as.numeric(dat_map$x)
   dat_map$y_num <- n_y - as.numeric(dat_map$y) + 1
+  dat_map$Freq_label <- dat_map$Freq # Label to print for frequency. Do not change
   if (is.null(max_freq)) max_freq <- max(dat_map$Freq)
-  fill_map <- colorRampPalette(color_range)(max_freq + 1)
-  dat_map$fill <- fill_map[dat_map$Freq + 1]
+  if (max_freq < max(dat_map$Freq)) {
+    # Capped max_freq at a smaller value to avoid too light color
+    # for low frequencies.
+    dat_map$Freq <- ifelse(dat_map$Freq < max_freq, dat_map$Freq, max_freq)
+  }
+  # fill_map <- colorRampPalette(color_range)(max_freq + 1)
+  # dat_map$fill <- fill_map[dat_map$Freq + 1]
+  # Make filling color slightly darker:
+  fill_map <- colorRampPalette(color_range)(max_freq + 2)
+  dat_map$fill <- fill_map[dat_map$Freq + 2]
   if (!is.null(fill_zero)) {
     dat_map$fill[which(dat_map$Freq == 0)] <- fill_zero
   }
@@ -77,7 +86,7 @@ plot_evid_map <- function(var_row, var_col, var_row_levels = NULL,
   grid.rect(x = unit(dat_map$x_num, "native"), y = unit(dat_map$y_num, "native"),
             width = unit(1, "native"), height = unit(1, "native"),
             gp = gpar(col = "white", fill = dat_map$fill))
-  grid.text(label = dat_map$Freq,
+  grid.text(label = dat_map$Freq_label,
             x = unit(dat_map$x_num, "native"), y = unit(dat_map$y_num, "native"),
             gp = gpar(fontsize = 12,
                       col = ifelse(dat_map$Freq == 0, color_zero, "black")))
@@ -105,31 +114,35 @@ plot_evid_map <- function(var_row, var_col, var_row_levels = NULL,
 #' @import dplyr
 #' @import magrittr
 #' @export
-plot_bar_row <- function(var_row, var_row_levels = NULL, fill = "steelblue",
-                         color_zero = "grey90",
+plot_bar_row <- function(var_row, var_row_levels = NULL,
+                         max_freq = NULL, label = TRUE,
+                         fill = "steelblue", color_zero = "grey90",
                          margins = c(0.5, 0, 4, 4)) {
   if (!is.factor(var_row)) var_row <- as.factor(var_row)
   n_y <- nlevels(var_row)
   dat_bar_row <- as.data.frame(table(var_row = var_row)) %>%
     arrange(-Freq, as.character(var_row)) %>%
     mutate(var_row = factor(var_row, levels = var_row),
-           y = as.numeric(var_row), x = max(Freq) - Freq / 2,
+           y = as.numeric(var_row),
            y_num = n_y - y + 1)
-  x_max <- max(dat_bar_row$Freq)
+  if (is.null(max_freq)) x_max <- max(dat_bar_row$Freq) else x_max <- max_freq
   pushViewport(plotViewport(margins = margins,
-                            xscale = c(0, max(dat_bar_row$Freq)),
+                            # Directly flip x to make life easy:
+                            xscale = c(x_max, 0),
                             yscale = c(0.5, n_y + 0.5)))
-  grid.rect(x = unit(dat_bar_row$x, "native"),
+  grid.rect(x = unit(dat_bar_row$Freq / 2, "native"),
             y = unit(dat_bar_row$y_num, "native"),
             width = unit(dat_bar_row$Freq, "native"),
             height = unit(0.99, "native"),
             gp = gpar(col = "white", fill = fill))
-  grid.text(label = dat_bar_row$Freq,
-            x = unit(x_max - dat_bar_row$Freq, "native") + unit(-0.1, "lines"),
-            y = unit(dat_bar_row$y_num, "native"),
-            just = "right",
-            gp = gpar(fontsize = 12, lineheight = 0.7,
-                      col = ifelse(dat_bar_row$Freq == 0, color_zero, "black")))
+  if (label) {
+    grid.text(label = dat_bar_row$Freq,
+              x = unit(dat_bar_row$Freq, "native") + unit(0.1, "lines"),
+              y = unit(dat_bar_row$y_num, "native"),
+              just = "right",
+              gp = gpar(fontsize = 12, lineheight = 0.7,
+                        col = ifelse(dat_bar_row$Freq == 0, color_zero, "black")))
+  }
   popViewport()
 }
 #' Plot bar plot on the top/bottom of an evidence gap map for column frequency.

@@ -7,6 +7,8 @@
 plot_bar_row(
   var_row,
   var_row_levels = NULL,
+  max_freq = NULL,
+  label = TRUE,
   fill = "steelblue",
   color_zero = "grey90",
   margins = c(0.5, 0, 4, 4)
@@ -19,6 +21,11 @@ plot_bar_row(
 values not in \code{var_row_levels} (in which case 0 will be plotted). The
 first level will be plotted in the top row. Default is \code{NULL}, i.e.,
 all unique values in \code{var_row} in alphabetic order.}
+
+\item{max_freq}{Maximum frequency corresponding to \code{color_range[2]}.
+Default is \code{NULL}, i.e., based on data. Can also choose a larger
+integer value. Useful when plotting multiple evidence maps and want to
+ensure the same color brightness refers to the same frequency.}
 
 \item{fill}{Filling color for the bar plot. Default is \code{"steelblue"}.}
 
